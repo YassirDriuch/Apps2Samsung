@@ -23,7 +23,7 @@ jobs:
     name: Mobile (iOS)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Pin the toolchain to Xcode 26: the newest .NET iOS workload (iOS 27 SDK) needs Xcode 27,
       # which the runner image doesn't carry yet. The 10.0.3xx workload set 10.0.303.1 is the newest
@@ -32,7 +32,7 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.3xx
 
