@@ -25,21 +25,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The newest .NET iOS workload needs the newest Xcode (27 for the iOS 27 SDK), which the
-      # runner may only carry as a beta/RC; "latest" includes those.
-      - name: List installed Xcodes
-        run: ls -d /Applications/Xcode*.app
+      # Pin the toolchain to Xcode 26: the newest .NET iOS workload (iOS 27 SDK) needs Xcode 27,
+      # which the runner image doesn't carry yet. The 10.0.3xx workload set 10.303.1 is the newest
+      # one on the iOS 26.5 SDK.
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest
+          xcode-version: latest-stable
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.3xx
 
       # On macOS the project targets Android and iOS, and restore resolves both.
       - name: Install MAUI workloads
-        run: dotnet workload install maui-ios maui-android
+        run: dotnet workload install maui-ios maui-android --version 10.303.1
 
       - name: Build
         run: >
