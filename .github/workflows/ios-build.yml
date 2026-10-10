@@ -1,0 +1,83 @@
+name: iOS build
+
+# Builds the sideloadable iOS app: an unsigned .ipa for AltStore / SideStore (they sign it with the
+# user's Apple ID on install) and a fakesigned .tipa for TrollStore (signed here with
+# Platforms/iOS/TrollStore.entitlements, which adds the multicast entitlement Wake-on-LAN needs).
+# Every push to the ios branch republishes both on the rolling "ios-latest" pre-release, so the
+# phone can download them straight from the release page.
+
+on:
+  push:
+    branches: [ios]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    name: Mobile (iOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      # .NET 10's iOS workload targets the iOS 26 SDK, which needs Xcode 26.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # On macOS the project targets Android and iOS, and restore resolves both.
+      - name: Install MAUI workloads
+        run: dotnet workload install maui-ios maui-android
+
+      - name: Build
+        run: >
+          dotnet build Apps2Samsung.Mobile/Apps2Samsung.Mobile.csproj
+          -c Release -f net10.0-ios
+          -p:ApplicationVersion=${{ github.run_number }}
+
+      - name: Package .ipa and .tipa
+        run: |
+          set -euo pipefail
+          app=$(find Apps2Samsung.Mobile/bin/Release/net10.0-ios -maxdepth 3 -name '*.app' -type d | head -1)
+          [ -n "$app" ] || { echo "No .app bundle found"; exit 1; }
+          echo "App bundle: $app"
+          exe=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Info.plist")
+
+          mkdir -p out
+
+          # AltStore / SideStore: unsigned, they sign on install.
+          rm -rf Payload && mkdir Payload && cp -R "$app" Payload/
+          rm -rf Payload/*.app/_CodeSignature
+          zip -qry out/Apps2Samsung.ipa Payload
+
+          # TrollStore: fakesign with the extra entitlements.
+          brew install ldid
+          rm -rf Payload && mkdir Payload && cp -R "$app" Payload/
+          rm -rf Payload/*.app/_CodeSignature
+          ldid -SApps2Samsung.Mobile/Platforms/iOS/TrollStore.entitlements "Payload/$(basename "$app")/$exe"
+          zip -qry out/Apps2Samsung.tipa Payload
+
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Apps2Samsung-iOS
+          path: out/*
+
+      - name: Publish ios-latest pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ios-latest --cleanup-tag --yes || true
+          gh release create ios-latest out/Apps2Samsung.ipa out/Apps2Samsung.tipa \
+            --prerelease --target "$GITHUB_SHA" --title "iOS (latest build)" \
+            --notes "Built from ${GITHUB_SHA::7}. AltStore / SideStore: Apps2Samsung.ipa. TrollStore: Apps2Samsung.tipa."

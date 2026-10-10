@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Used only by the TrollStore build (.github/workflows/ios-build.yml signs the .tipa with it).
+     The build itself is unsigned, and AltStore signs with what a regular developer certificate
+     allows, which excludes multicast. -->
+<plist version="1.0">
+<dict>
+	<key>application-identifier</key>
+	<string>nl.madebypatrick.apps2samsung</string>
+	<!-- Wake-on-LAN: the remote's power-on sends a UDP broadcast, which iOS blocks without it. -->
+	<key>com.apple.developer.networking.multicast</key>
+	<true/>
+</dict>
+</plist>

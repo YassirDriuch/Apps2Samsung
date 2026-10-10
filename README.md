@@ -50,6 +50,15 @@ The phone app is the mobile installer head — run the whole install from your p
 - **F-Droid** — add our repository in the F-Droid app (Settings → Repositories → Add): `https://apps2samsung.com/fdroid/repo`. It serves the latest **stable** and updates automatically. Works in F-Droid, Droid-ify and Neo Store.
 - **Direct** — grab the `-android.apk` from any [release](https://github.com/Apps2Samsung/Apps2Samsung/releases) and sideload it.
 
+### 🍏 Get the iOS app (sideload)
+
+The same phone app, built for iPhone and iPad (iOS 14+). Download it from the [`ios-latest` pre-release](../../releases/tag/ios-latest):
+
+- **TrollStore** — open `Apps2Samsung.tipa` in TrollStore. This build includes Wake-on-LAN for the remote's power button.
+- **AltStore / SideStore** — install `Apps2Samsung.ipa`. Everything works except Wake-on-LAN, which needs an Apple entitlement a personal signing certificate can't carry.
+
+On first launch iOS asks to let Apps2Samsung find devices on your local network. Allow it, or the app can't see your TV (Settings → Privacy & Security → Local Network if you declined). Keep the app open while an install runs.
+
 ### 🐧 Arch Linux (AUR)
 
 The official [`apps2samsung`](https://aur.archlinux.org/packages/apps2samsung) package is published by this repo's release workflow, so it follows every **stable** release:

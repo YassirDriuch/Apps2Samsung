@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Android-first head. Single-target on purpose: iOS/MacCatalyst/Windows are dropped so
-		     the build needs only the maui-android workload (no ios/maccatalyst). Re-add TFMs here
-		     if another platform head is ever wanted — the shared logic lives in Apps2Samsung.Core. -->
+		<!-- Android everywhere; iOS is added only on macOS, the one OS that can build it (Xcode).
+		     That keeps the Linux CI and dev machines on just the maui-android workload. -->
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">net10.0-android;net10.0-ios</TargetFrameworks>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -55,11 +55,21 @@
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+	</PropertyGroup>
+
+	<!-- iOS is sideloaded (AltStore / TrollStore), never App Store signed: the CI builds it unsigned
+	     and the sideloading tool signs it on install. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+		<EnableCodeSigning>false</EnableCodeSigning>
+		<CodesignRequireProvisioningProfile>false</CodesignRequireProvisioningProfile>
+		<!-- Full AOT, no interpreter: sideloaded apps get no JIT, and AOT is what iOS runs anyway. -->
+		<UseInterpreter>false</UseInterpreter>
 	</PropertyGroup>
 
 	<ItemGroup>

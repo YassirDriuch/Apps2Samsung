@@ -103,6 +103,11 @@ public partial class InstallerPage : ContentPage
 
 	private async Task CheckForUpdatesAsync()
 	{
+		// The release feed only carries the Android .apk; a sideloaded iOS build is updated through
+		// AltStore / TrollStore instead.
+		if (DeviceInfo.Current.Platform == DevicePlatform.iOS)
+			return;
+
 		try
 		{
 			var current = AppInfo.Current.VersionString;
@@ -499,6 +504,9 @@ public partial class InstallerPage : ContentPage
 
 		InstallBtn.IsEnabled = false;
 		RefreshBtn.IsEnabled = false;
+		// iOS suspends an app (and drops its sockets) soon after the screen locks, and an install can
+		// outlast the auto-lock timer; keep the screen on until it finishes.
+		DeviceDisplay.Current.KeepScreenOn = true;
 		string? wgtPath = null;
 		try
 		{
@@ -576,6 +584,7 @@ public partial class InstallerPage : ContentPage
 					_customWgtPath = null; // force a re-pick next time (the copy is gone)
 			}
 
+			DeviceDisplay.Current.KeepScreenOn = false;
 			InstallBtn.IsEnabled = true;
 			RefreshBtn.IsEnabled = true;
 		}

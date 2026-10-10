@@ -6,9 +6,6 @@ using Result = Android.App.Result;
 
 namespace Apps2Samsung.Mobile.Services;
 
-/// <summary>A file the user picked, already copied into app cache so the content URI can be released.</summary>
-public sealed record PickedFile(string FileName, string LocalPath);
-
 /// <summary>
 /// Storage Access Framework file picker, used instead of <c>FilePicker.Default.PickAsync</c>.
 ///
