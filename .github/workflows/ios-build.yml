@@ -25,10 +25,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # .NET 10's iOS workload targets the iOS 26 SDK, which needs Xcode 26.
+      # The newest .NET iOS workload needs the newest Xcode (27 for the iOS 27 SDK), which the
+      # runner may only carry as a beta/RC; "latest" includes those.
+      - name: List installed Xcodes
+        run: ls -d /Applications/Xcode*.app
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: latest
 
       - uses: actions/setup-dotnet@v4
         with:
